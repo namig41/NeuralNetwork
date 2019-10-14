@@ -7,7 +7,7 @@ classdef Data < handle
   endproperties
 
   methods
-    function self = Data(d)
+    function self = Data(d=0)
         if ismatrix(d)
             self.matrix = d;
             self.n = size(d, 1);
@@ -48,7 +48,7 @@ classdef Data < handle
         endif
     endfunction
 
-    function U = unique(self)
+    function U = unique(self, change=false)
         flag = 1;
         U = Data(self.matrix(1, :));
         for i=2:self.n
@@ -64,7 +64,12 @@ classdef Data < handle
                 flag = 1;
             endif
         endfor
+        if change
+            self.matrix = U.matrix;
+        endif
     endfunction
+
+
 
   endmethods
 endclassdef
