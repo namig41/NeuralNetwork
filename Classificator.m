@@ -5,47 +5,45 @@ classdef Classificator < handle
         h;
     endproperties
 
-    methods
-        function Kr = quadratic(sefl, r)
-            Kr = 15 / 16 * (1 - r**2) * (abs(r) <= 1);
+    methods (Static = true)
+        function Kr = quadratic(r)
+            Kr = 15 / 16 * (1 - r.^2) .* (abs(r) <= 1);
         endfunction
 
-        function Kr = triangular(self, r)
-            Kr = (1 - abs(r)) * (abs(r) <= 1);
+        function Kr = triangular(r)
+            Kr = (1 - abs(r)) .* (abs(r) <= 1);
         endfunction
 
         function Kr = gauss(self, r)
-            kr = 2 * pi;
+            kr = (2 * pi())^(1 / 2) .* exp(-1 / 2 * r.^2);
         endfunction
 
-        function Kr = rectangular(self, r)
+        function Kr = rectangular(r)
             Kr = 1 / 2 * (abs(r) <= 1);
         endfunction
 
-        function r = dist(self, X, Y)
+        function r = dist(X, Y, p)
             r = 0;
-            if self.p < 1
-                error("METRICS ERROR");
+            if p < 1
+                error("AXIOMS OF METRICS ARE NOT SATISFIED");
             else
-                for i=1:size(X, 2)
-                    r = r + (X(i) - Y(i))^self.p;
-                endfor
-                r = r^(1 / self.p);
+                r = sum(abs(X - Y).^p, 2).^(1 / p);
             endif
         endfunction
 
-        function data_bootstrap = bootstrap(self, data, n)
-            data_bootstrap = Data()
-            for i=1:n
-                for j=1:data.n
-                    data_bootstrap.add_row(data.matrix(randi(data.n), :));
-                endfor
-            endfor
+        function [h, p] = bootstrap(data, n)
+            Data_set = Data([data.matrix(randi(data.n, 1, n), :)]);
+            Data_test = Data();
+            Error = Data();
+            E = 0;
+
+            Data_set.unique();
+            disp(Data_set.matrix);
         endfunction
     endmethods
 
     methods
-        function self = Classificator(p=2, h=20)
+        function self = Classificator(p=2, h=10)
              self.p = p;
              self.h = h;
         endfunction
@@ -55,14 +53,24 @@ classdef Classificator < handle
             disp("p = "); disp(self.p);
         endfunction
 
-        function res = methodParzenWindow(self, X, x0)
-            res = 0;
-            for i=1:size(X, 1)
-                res = res + self.quadratic(self.dist(X(i, :), x0) / self.h);
-            endfor
+        function s = binaryClassification(self, X, Y, x)
+            s = 0;
+            if ~ismatrix(X) || ~ismatrix(Y)
+                error("IS NOT MATRIX");
+            endif
+
+            s = self.methodParzenWindow(X, x) > self.methodParzenWindow(Y, x);
         endfunction
 
-        function res = methodKNN(self, X, x0)
+        function res = methodParzenWindow(self, X, x)
+            res = 0;
+            %for i=1:size(X, 1)
+            %    res = res + self.triangular(self.dist(X(i, :), x, self.p) / self.h);
+            %endfor
+            res = sum(self.triangular(self.dist(X, x, self.p) ./ self.h));
+        endfunction
+
+        function res = methodKNN(self, X, x)
         
         endfunction
     endmethods
