@@ -22,6 +22,14 @@ classdef Classificator < handle
             Kr = 1 / 2 * (abs(r) <= 1);
         endfunction
 
+        function V = linear(X, i, k)
+            V = (k + 1 - i) / k;
+        endfunction
+
+        function V = exps(X, i, q)
+            V = q**i;
+        endfunction
+
         function r = dist(X, Y, p)
             r = 0;
             if p < 1
@@ -31,15 +39,6 @@ classdef Classificator < handle
             endif
         endfunction
 
-        function [h, p] = bootstrap(data, n)
-            Data_set = Data([data.matrix(randi(data.n, 1, n), :)]);
-            Data_test = Data();
-            Error = Data();
-            E = 0;
-
-            Data_set.unique();
-            disp(Data_set.matrix);
-        endfunction
     endmethods
 
     methods
@@ -49,29 +48,65 @@ classdef Classificator < handle
         endfunction
 
         function disp(self)
-            disp("h = "); disp(self.h);
-            disp("p = "); disp(self.p);
+            printf("h = %d\np = %d\n", self.h, self.p)
         endfunction
 
-        function s = binaryClassification(self, X, Y, x)
-            s = 0;
-            if ~ismatrix(X) || ~ismatrix(Y)
-                error("IS NOT MATRIX");
-            endif
-
+        function s = binaryClassificationParzenWindow(self, X, Y, x)
             s = self.methodParzenWindow(X, x) > self.methodParzenWindow(Y, x);
         endfunction
 
+        function s = binaryClassificationKNN(self, X, x, k=1, i)
+            X.sort(x, 2, self.p);
+            s = X(1:k, self.m-1:self.m-1)' * self.exps(i:i+k);
+        endfunction
+
         function res = methodParzenWindow(self, X, x)
-            res = 0;
-            %for i=1:size(X, 1)
-            %    res = res + self.triangular(self.dist(X(i, :), x, self.p) / self.h);
-            %endfor
             res = sum(self.triangular(self.dist(X, x, self.p) ./ self.h));
         endfunction
 
-        function res = methodKNN(self, X, x)
-        
+        function oh = bootstrap(self, data, n)
+            gloablError = Data();
+            for r=1:n
+                data_sample= Data([data.matrix(randi(data.n, 1, floor(n * 0.7)), :)]);
+                data_control = Data();
+                E = intmax('uint64');
+
+                data_sample.unique();
+                for i=1:data.n
+                    fl=1;
+                    for j=1:data_sample.n
+                    if data.matrix(i, :) == data_sample.matrix(j, :)
+                            fl = 0;
+                            break
+                        endif
+                    endfor
+                    if fl
+                        data_control.add_row(data.matrix(i, :));
+                    endif
+                endfor
+
+                for th=2:15
+                    tE=0;
+                    for i=1:data_control.n
+                        if sign((self.triangular(self.dist(data_sample.matrix(:, 1:data_sample.m-1),
+                            data_control.matrix(i, 1:data_control.m-1), self.p) ./ th)' .*
+                            data_sample.matrix(:, end))) ~= data_control.matrix(i, end)
+                            tE += 1;
+                        endif
+                    endfor
+                    if tE == 0
+                        oh = th;
+                        break
+                    elseif E > tE
+                        oh = th;
+                        E = tE;
+                        printf("h=%d E=%d\n", oh, E);
+                    endif
+                endfor
+                gloablError.add_row([r oh]);
+                printf("%d. h=%d\n", r, oh);
+            endfor
         endfunction
+
     endmethods
 endclassdef

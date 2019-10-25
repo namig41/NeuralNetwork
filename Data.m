@@ -43,8 +43,23 @@ classdef Data < handle
         self.n = size(self.matrix, 1);
     endfunction
 
-    function U = unique(self, change=false, myfunction=false)
-        if myfunction 
+    function sort(self, value=0, p=2)
+         i = 0;
+         j = 0;
+
+         for i=1:self.n
+            for j=i+1:self.n-1
+                if norm(self.matrix(i, 1:self.m-1)-value, p) > norm(self.matrix(j, 1:self.m-1)-value, p)
+                    tmp = self.matrix(i, :);
+                    self.matrix(i, :) = self.matrix(j, :);
+                    self.matrix(j, :) = tmp;
+                endif
+            endfor
+        endfor
+    endfunction
+
+    function U = unique(self, ch=false, mf=false)
+        if mf 
             flag = 1;
             U = Data(self.matrix(1, :));
             for i=2:self.n
@@ -60,7 +75,7 @@ classdef Data < handle
                     flag = 1;
                 endif
             endfor
-            if change
+            if ch
                 self.matrix = U.matrix;
             endif
         else
