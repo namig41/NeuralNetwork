@@ -33,14 +33,32 @@ classdef NMatrix < handle
         self.matrix = [self.matrix, v];
         self.update_size();
     end
-
+    
+    function pop_front(self)
+        self.matrix(0) = [];
+        self.update_size();
+    end
+    
+    function pop_back(self)
+        self.matrix(end) = [];
+        self.update_size();
+    end
+    
+    function pop_index(self, index)
+        if nargin < 2
+            index = 1;
+        end
+        self.matrix(index, :) = [];
+        self.update_size();
+    end
+    
     function update_size(self)
         self.m = size(self.matrix, 2);
         self.n = size(self.matrix, 1);
     end
     
-    function [n m] = get_size(self)
-        [n m] = size(self.matrix);
+    function s = get_size(self)
+        s = size(self.matrix);
     end
 
     function sort(self, value, p)
@@ -63,7 +81,7 @@ classdef NMatrix < handle
         end
     end
     
-        function L = get_col(self, l)
+    function L = get_col(self, l)
         if isnumeric(l) && (l > self.n || l <= 0)
             error('ERROR. INDEX OUT OF RANGE');
         else
@@ -90,6 +108,13 @@ classdef NMatrix < handle
     end
 
     function U = unique(self, ch, mf)
+        if nargin < 3
+            mf = true;
+        end
+        if nargin < 2 
+            mf = true;
+            ch = true;
+        end
         if mf
             flag = 1;
             U = NMatrix(self.matrix(1, :));

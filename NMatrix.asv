@@ -55,10 +55,20 @@ classdef NMatrix < handle
         end
     end
     
-    function L = get_line(self, l)
-        if l > self.n
-            error('ERROR. LINE ')
-        L = self.matrix(l, :);
+    function L = get_row(self, l)
+        if isnumeric(l) && (l > self.n || l <= 0)
+            error('ERROR. INDEX OUT OF RANGE');
+        else
+            L = self.matrix(l, :);
+        end
+    end
+    
+        function L = get_col(self, l)
+        if isnumeric(l) && (l > self.n || l <= 0)
+            error('ERROR. INDEX OUT OF RANGE');
+        else
+            L = self.matrix(:, l);
+        end
     end
     
     function U = unique_matrix(self, XY)

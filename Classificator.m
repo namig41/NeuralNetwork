@@ -70,15 +70,13 @@ classdef Classificator < handle
             res = sum(self.triangular(self.dist(X, x, self.p) ./ self.h));
         end
 
-        function [globalError, oh] = bootstrap(self, data, n)
-            globalError = NMatrix(ones(1, 15)*inf);
+        function globalError = bootstrap(self, data, n, h_range)
+            globalError = NMatrix(ones(1, h_range)*inf);
             for r=1:n
-                data_sample = NMatrix(data.matrix(randi(floor(n * 0.7), n, 1), :));
-                data_sample.unique(true, true);
+                data_sample = NMatrix(data.matrix(randi(data.n, data.n, 1), :));
+                data_sample.unique();
                 data_control = data_sample.unique_matrix(data.matrix);
-                E = inf;
-
-                for th=1:15
+                for th=1:h_range
                     tE=0;
                     for i=1:data_control.n
                         if sign(self.triangular(self.dist(data_sample.matrix(:, 1:data_sample.m-1),...
@@ -87,21 +85,27 @@ classdef Classificator < handle
                             tE = tE + 1;
                         end
                     end
-                    
-                    if tE == 0
-                        oh = th;
-                        break
-                    elseif E > tE
-                        oh = th;
-                        E = tE;
-                    end
+                    globalError.matrix(th) = min(globalError.matrix(th), tE);
                 end
             end
         end
         
-        function globalError = LOO(self, data)
-            
+        function globalError = LOO(self, data, h_range)
+            globalError = NMatrix(ones(1, h_range)*inf);
+            tmp = NMatrix(data.matrix);
+            for th=1:h_range
+                tE = 0;
+                for i=1:tmp.n - 1
+                    data.matrix(i, :) = 0;
+                    if sign(self.triangular(self.dist(data.matrix(:, 1:data.m-1),...
+                            tmp.matrix(i, 1:data.m-1), self.p) ./ th)' * data.matrix(:, end)) ~=...
+                            tmp.matrix(i, end)
+                      tE = tE + 1;
+                    end
+                    data.matrix = tmp.matrix;
+                end
+                globalError.matrix(th) = min(globalError.matrix(th), tE);
+            end
         end
-
     end
 end
