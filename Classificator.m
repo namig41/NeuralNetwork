@@ -37,7 +37,26 @@ classdef Classificator < handle
                 r = sum(abs(bsxfun(@(x,y) x - y, X, Y)).^p, 2).^(1 / p);
             end
         end
-
+        
+        function globalError = LOO_RF(data, N)
+            globalError = NMatrix(ones(1, N)*inf);
+            tmp = data.matrix;
+            for tN=1:N
+                tE = 0;
+                s = 0;
+                for i=1:data.n - 1
+                    tmp(i, :) = [];
+                    for j=1:tN
+                        sample = tmp(randi(data.n - 1, data.n - 1, 1), :);
+                        tree = treefit(sample(:, [1 2]), sample(:, end));
+                        s = s + treeval(tree, data.matrix(i, [1, 2]));
+                    end
+                    tE = tE + round(s / tN);
+                    tmp = data.matrix;
+                end
+                globalError.matrix(tN) = min(globalError.matrix(tN), tE);
+            end
+        end
     end
 
     methods

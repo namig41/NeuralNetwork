@@ -116,9 +116,9 @@ classdef NMatrix < handle
             ch = true;
         end
         if mf
-            flag = 1;
             U = NMatrix(self.matrix(1, :));
             for i=2:self.n
+                flag = 1;
                 for j=1:U.n
                     if U.matrix(j, :) == self.matrix(i, :)
                         flag = 0;
@@ -127,8 +127,6 @@ classdef NMatrix < handle
                 end
                 if flag
                     U.add_row(self.matrix(i, :));
-                else
-                    flag = 1;
                 end
             end
             if ch
