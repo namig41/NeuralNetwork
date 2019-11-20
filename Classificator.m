@@ -38,24 +38,19 @@ classdef Classificator < handle
             end
         end
         
-        function globalError = LOO_RF(data, N)
-            globalError = NMatrix(ones(1, N)*inf);
-            tmp = data.matrix;
-            for tN=1:N
-                tE = 0;
-                s = 0;
-                for i=1:data.n - 1
-                    tmp(i, :) = [];
-                    for j=1:tN
-                        sample = tmp(randi(data.n - 1, data.n - 1, 1), :);
-                        tree = treefit(sample(:, [1 2]), sample(:, end));
-                        s = s + treeval(tree, data.matrix(i, [1, 2]));
-                    end
-                    tE = tE + round(s / tN);
-                    tmp = data.matrix;
+        function Nopt = LOO_RF(data, N)
+            globalError = NMatrix(ones(1, N));
+            for i=1:data.n
+                tmp = data.matrix;
+                tmp(i, :) = [];
+                for j=1:N
+                    sample = tmp(randi(data.n - 1, data.n, 1), :);
+                    tree = treefit(sample(:, [1, 2]), sample(:, end));
+                    globalError.matrix(j) = globalError.matrix(j) +...
+                                            ~(treeval(tree, data.matrix(i, [1, 2])) == data.matrix(i, end));
                 end
-                globalError.matrix(tN) = min(globalError.matrix(tN), tE);
             end
+            Nopt = find(globalError.matrix == min(globalError.matrix), 1, 'first');
         end
     end
 
@@ -89,8 +84,9 @@ classdef Classificator < handle
             res = sum(self.triangular(self.dist(X, x, self.p) ./ self.h));
         end
 
-        function globalError = bootstrap(self, data, n, h_range)
-            globalError = NMatrix(ones(1, h_range)*inf);
+        function [analysisError, h] = bootstrap(self, data, n, h_range)
+            globalError = NMatrix(ones(n, h_range)*inf);
+            analysisError = NMatrix(zeros(2, h_range));
             for r=1:n
                 data_sample = NMatrix(data.matrix(randi(data.n, data.n, 1), :));
                 data_sample.unique();
@@ -104,8 +100,26 @@ classdef Classificator < handle
                             tE = tE + 1;
                         end
                     end
-                    globalError.matrix(th) = min(globalError.matrix(th), tE);
+                    globalError.matrix(r, th) = min(globalError.matrix(th), tE);
                 end
+            end
+            for i=1:analysisError.m
+                analysisError.matrix(1, i) = mean(globalError.matrix(:, i));
+                analysisError.matrix(2, i) = std(globalError.matrix(:, i));
+            end
+            mean_min = inf;
+            h = 1;
+            while 1
+               for i=h:analysisError.m
+                    if mean_min > analysisError.matrix(1, i)
+                        h = i;
+                        mean_min = analysisError.matrix(1, i);
+                    else break;
+                    end
+               end
+               if h == find(analysisError.matrix(2, h) == min(analysisError.matrix(2, h), 1, 'first'))
+                   break;
+               end
             end
         end
         
