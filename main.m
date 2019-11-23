@@ -9,7 +9,7 @@ close all;
 % Class1.unique();
 % Class2.unique();
 % 
-% nn = Classificator(2, 10);
+% clr = Classificator(2, 10);
 % 
 % C1 = NMatrix();
 % C2 = NMatrix();
@@ -20,7 +20,7 @@ close all;
 % 
 % for i=1:XY.n
 %     row = XY.get_row(i);
-%     if nn.binaryClassificationParzenWindow(Class1.matrix, Class2.matrix, row)
+%     if clr.binaryClassificationParzenWindow(Class1.matrix, Class2.matrix, row)
 %         C1.add_row(row);
 %     else
 %         C2.add_row(row);
@@ -30,8 +30,8 @@ close all;
 % 
 % Class1.add_col(ones([Class1.n 1]));
 % Class2.add_col(ones([Class2.n 1]) * -1);
-% [analysisError, h] = nn.bootstrap(NMatrix([Class1.matrix; Class2.matrix]), 50, 30);
-% El = nn.LOO(NMatrix([Class1.matrix; Class2.matrix]), 10);
+% [analysisError, h] = clr.bootstrap(NMatrix([Class1.matrix; Class2.matrix]), 50, 30);
+% El = clr.LOO(NMatrix([Class1.matrix; Class2.matrix]), 10);
 % 
 % figure(1)
 % hold on;
@@ -88,8 +88,6 @@ close all;
 % 
 % Nopt = Classificator.LOO_RF(C, 40);
 % 
-% T1 = NMatrix();
-% T2 = NMatrix();
 % 
 % RF = cell(Nopt);
 % for j=1:Nopt
@@ -103,9 +101,9 @@ close all;
 %         s = s + treeval(RF{j}, XY(i, :));
 %     end
 %     if round(s / Nopt)
-%         T1.add_row(XY(i, :));
+%         scatter(XY(:, 1), XY(:, 2), 'r', 'filled'); 
 %     else
-%         T2.add_row(XY(i, :));
+%         scatter(XY(:, 1), XY(:, 2), 'g', 'filled'); 
 %     end
 % end
 % 
@@ -113,12 +111,6 @@ close all;
 % hold on
 % scatter(CR1.matrix(:, 1), CR1.matrix(:, 2), 'r', 'filled');
 % scatter(CR2.matrix(:, 1), CR2.matrix(:, 2), 'g', 'filled');
-% hold off
-% 
-% figure(2)
-% hold on
-% scatter(T1.matrix(:, 1), T1.matrix(:, 2), 'r', 'filled'); 
-% scatter(T2.matrix(:, 1), T2.matrix(:, 2), 'g', 'filled'); 
 % hold off
 % toc
 
@@ -135,14 +127,14 @@ C2 = NMatrix(XY(find(k*X(:) + b < Y(:)), :));
 clear k; clear b;
 clear X; clear Y;
 
-traning_set1 = NMatrix(C1.matrix(randi(C1.n, 500, 1), :));
-traning_set2 = NMatrix(C2.matrix(randi(C2.n, 500, 1), :));
+train_set1 = NMatrix(C1.matrix(randi(C1.n, 500, 1), :));
+train_set2 = NMatrix(C2.matrix(randi(C2.n, 500, 1), :));
 
-traning_set1.unique();
-traning_set2.unique();
+train_set1.unique();
+train_set2.unique();
 
-C1 = traning_set1.unique_matrix(C1.matrix);
-C2 = traning_set2.unique_matrix(C2.matrix);
+C1 = train_set1.unique_matrix(C1.matrix);
+C2 = train_set2.unique_matrix(C2.matrix);
 
 control_set1 = NMatrix(C1.matrix(randi(C1.n, 170, 1), :));
 control_set2 = NMatrix(C2.matrix(randi(C2.n, 170, 1), :));
@@ -150,10 +142,37 @@ control_set2 = NMatrix(C2.matrix(randi(C2.n, 170, 1), :));
 control_set1.unique();
 control_set2.unique();
 
+nn_setting.inodes = 2;
+nn_setting.hnodes = 2;
+nn_setting.onodes = 1;
+nn_setting.lr = 0.3;
+
+nn = NeuralNetwork(nn_setting);
+
+train_set = [train_set1.matrix ones(train_set1.n, 1); 
+          train_set2.matrix -ones(train_set2.n, 1)];
+
+nn.train(train_set(randi(size(train_set, 1), 10000, 1), :), 10);
+
 figure(1)
 hold on
 scatter(control_set1.matrix(:, 1), control_set1.matrix(:, 2), 'r', 'filled');
-scatter(control_set2.matrix(:, 1), control_set2.matrix(:, 2), 'g', 'filled'); 
+scatter(control_set2.matrix(:, 1), control_set2.matrix(:, 2), 'g', 'filled');
+hold off
+toc
+
+figure(2)
+hold on
+for i=1:size(XY, 1)
+    if sign(nn.query(XY(i, :))) >= 0;
+        scatter(XY(:, 1), XY(:, 2), 'r', 'filled');
+    else
+        scatter(XY(:, 1), XY(:, 2), 'g', 'filled');
+    end
+end
 hold off
 
-toc
+
+
+
+%imshow(reshape(data(2, 2:end), [28, 28])')
