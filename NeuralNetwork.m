@@ -2,14 +2,10 @@ classdef NeuralNetwork < handle
     
     properties
         setting
-        %wih
-        %who
-        W
     end
     
     properties (Access = private)
-        %W
-        A
+        W
     end
     
     methods (Static = true)
@@ -50,15 +46,6 @@ classdef NeuralNetwork < handle
     end
     
     methods
-%         function self = NeuralNetwork(inputnodes, outputnodes, numhiddenlayars, learningrate)
-%             self.inodes = inputnodes;
-%             %self.hnodes = hiddennodes;
-%             self.onodes = outputnodes;
-%             self.lr = learningrate;
-%             
-%             self.wih = normrnd(0, sqrt(self.hnodes), [self.hnodes, self.inodes]);
-%             self.who = normrnd(0, sqrt(self.hnodes), [self.onodes, self.hnodes]);
-%         end
 
         function self = NeuralNetwork(nn_setting)
             self.setting = nn_setting;
@@ -74,21 +61,6 @@ classdef NeuralNetwork < handle
                                     [self.setting.nnodes.matrix(i + 1), self.setting.nnodes.matrix(i)]);
             end
         end
-            
-        
-%         function backpropagation(self, inputs_data, targets_data)
-%             hidden_inputs = self.wih * inputs_data';
-%             hidden_outputs = self.sigmoid(hidden_inputs);
-%             
-%             outputs_data = self.who * hidden_outputs;
-%             outputs_data = self.sigmoid(outputs_data);
-%             
-%             outputs_errors = targets_data' - outputs_data;
-%             hidden_errors = self.who' * outputs_errors;
-% 
-%             self.who = self.who + self.lr * (outputs_errors .* outputs_data .* (1 - outputs_data) * hidden_outputs');
-%             self.wih = self.wih + self.lr * (hidden_errors .* hidden_outputs .* (1 - hidden_outputs) * hidden_errors');
-%         end
         
         function [outputs_data, outputs_errors] = backpropagation(self, inputs_data, targets_data, index)
             if index < self.setting.nnodes.m
@@ -112,10 +84,8 @@ classdef NeuralNetwork < handle
         function outputs_data = query(self, inputs_data)
             outputs_data = inputs_data';
             for i=1:length(self.W)
-                outputs_data = self.W{i} * outputs_data;
-                outputs_data = self.af_sigmoid(outputs_data);
-                outputs_data
-            end
+                outputs_data = self.af_sigmoid(self.W{i} * outputs_data);
+             end
         end
     end
     

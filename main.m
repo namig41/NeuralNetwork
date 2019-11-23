@@ -161,18 +161,22 @@ scatter(control_set2.matrix(:, 1), control_set2.matrix(:, 2), 'g', 'filled');
 hold off
 toc
 
-figure(2)
 hold on
+T1 = [];
+T2 = [];
 for i=1:size(XY, 1)
     if sign(nn.query(XY(i, :))) >= 0;
-        scatter(XY(:, 1), XY(:, 2), 'r', 'filled');
+        T1 = [T1; XY(i, :)];
     else
-        scatter(XY(:, 1), XY(:, 2), 'g', 'filled');
+        T2 = [T2; XY(i, :)];
     end
 end
+
+
+figure(2)
+hold on
+scatter(T1(:, 1), T1(:, 2), 'r', 'filled');
+scatter(T2(:, 1), T2(:, 2), 'g', 'filled');
 hold off
-
-
-
 
 %imshow(reshape(data(2, 2:end), [28, 28])')
