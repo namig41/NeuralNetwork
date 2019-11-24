@@ -37,21 +37,6 @@ classdef Classificator < handle
                 r = sum(abs(bsxfun(@(x,y) x - y, X, Y)).^p, 2).^(1 / p);
             end
         end
-        
-        function Nopt = LOO_RF(data, N)
-            globalError = NMatrix(ones(1, N));
-            for i=1:data.n
-                tmp = data.matrix;
-                tmp(i, :) = [];
-                for j=1:N
-                    sample = tmp(randi(data.n - 1, data.n, 1), :);
-                    tree = treefit(sample(:, [1, 2]), sample(:, end));
-                    globalError.matrix(j) = globalError.matrix(j) +...
-                                            ~(treeval(tree, data.matrix(i, [1, 2])) == data.matrix(i, end));
-                end
-            end
-            Nopt = find(globalError.matrix == min(globalError.matrix), 1, 'first');
-        end
     end
 
     methods

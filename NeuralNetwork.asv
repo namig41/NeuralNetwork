@@ -2,14 +2,10 @@ classdef NeuralNetwork < handle
     
     properties
         setting
-        %wih
-        %who
-
     end
     
     properties (Access = private)
         W
-        A
     end
     
     methods (Static = true)
@@ -50,15 +46,6 @@ classdef NeuralNetwork < handle
     end
     
     methods
-%         function self = NeuralNetwork(inputnodes, outputnodes, numhiddenlayars, learningrate)
-%             self.inodes = inputnodes;
-%             %self.hnodes = hiddennodes;
-%             self.onodes = outputnodes;
-%             self.lr = learningrate;
-%             
-%             self.wih = normrnd(0, sqrt(self.hnodes), [self.hnodes, self.inodes]);
-%             self.who = normrnd(0, sqrt(self.hnodes), [self.onodes, self.hnodes]);
-%         end
 
         function self = NeuralNetwork(nn_setting)
             self.setting = nn_setting;
@@ -67,57 +54,49 @@ classdef NeuralNetwork < handle
         end
         
         function createNeuralNetwork(self)
-            self.W = cell(self.setting.nnodes.m - 1);
-            
+            self.W = cell(1, self.setting.nnodes.m - 1);
+            self.updateW();
+        end
+        
+        function updateW(self)
             for i=1:self.setting.nnodes.m - 1
-                self.W{i} = normrnd(0, sqrt(self.setting.nnodes.matrix(i + 1)),...
-                                    [self.setting.nnodes.matrix(i + 1), self.setting.nnodes.matrix(i)]);
+                self.W{i} = randi([-150 150], [self.setting.nnodes.matrix(i + 1), self.setting.nnodes.matrix(i)]) ./ 1e4;
             end
         end
-            
-        
-%         function backpropagation(self, inputs_data, targets_data)
-%             hidden_inputs = self.wih * inputs_data';
-%             hidden_outputs = self.sigmoid(hidden_inputs);
-%             
-%             outputs_data = self.who * hidden_outputs;
-%             outputs_data = self.sigmoid(outputs_data);
-%             
-%             outputs_errors = targets_data' - outputs_data;
-%             hidden_errors = self.who' * outputs_errors;
-% 
-%             self.who = self.who + self.lr * (outputs_errors .* outputs_data .* (1 - outputs_data) * hidden_outputs');
-%             self.wih = self.wih + self.lr * (hidden_errors .* hidden_outputs .* (1 - hidden_outputs) * hidden_errors');
+%         function LOO(self, data)
+%             globalError = NMatrix(ones(1, data.n));
 %         end
-
-        self.who += self.lr * numpy.dot((output_errors * final_outputs * (1.0 - final_outputs)), numpy.transpose(hidden_outputs))
-        self.wih += self.lr * numpy.dot((hidden_errors * hidden_outputs * (1.0 - hidden_outputs)), numpy.transpose(inputs))
-
         
-        function outputs_data = backpropagation(self, inputs_data, targets_data, index)
+        function [error, outputs_data, outputs_errors] = backpropagation(self, inputs_data, targets_data, index)
             if index < self.setting.nnodes.m
-                outputs_data = self.backpropagation(self.af_sigmoid(self.W{index} * inputs_data), targets_data, index + 1);
-                outputs_errors = targets_data - outputs_data;
-                self.W{index} = self.W{index} + self.setting.lr * (outputs_errors .* outputs_data .* (1 - outputs_data) * inputs_data');
-                
+                [error, outputs_data, outputs_errors] = self.backpropagation(self.af_sigmoid(self.W{index} * inputs_data), targets_data, index + 1);
+                self.W{index} = self.W{index} - self.setting.lr *...
+                            (outputs_errors .* outputs_data .* (1 - self.af_sigmoid(outputs_data)) .* self.af_sigmoid(outputs_data)  * inputs_data');
+                outputs_errors = self.W{index}' * outputs_errors;
             else
-                outputs_data = inputs_data;
+                outputs_errors = inputs_data - targets_data;
+                error = std(outputs_errors);
             end
-        end
+            outputs_data = inputs_data;
+       end
         
         function train(self, inputs_data, epochs)
+            Q = inf;
             for e=1:epochs
-                for i=1:size(inputs_data, 1)
-                    self.backpropagation(inputs_data(i, [1 2])', inputs_data(i, end), 1);
-                end
+                rx = inputs_data(randi(size(inputs_data, 1), 1), :);
+                self.updateW();
+                Qi = 0;
+                while abs(Q - Qi) < 1e-8
+                    Q = (1 - 0.001)* Q + 0.001 * Qi;
+                    [Qi, , ] = self.backpropagation(rx(:, [1 2])', rx(:, end), 1);
+                end  
             end
         end
         
         function outputs_data = query(self, inputs_data)
             outputs_data = inputs_data';
             for i=1:length(self.W)
-                outputs_data = self.W{i} * outputs_data;
-                outputs_data = self.af_sigmoid(outputs_data);
+                outputs_data = self.af_sigmoid(self.W{i} * outputs_data);
             end
         end
     end

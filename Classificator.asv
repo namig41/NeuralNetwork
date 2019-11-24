@@ -38,20 +38,37 @@ classdef Classificator < handle
             end
         end
         
-        function Nopt = LOO_RF(data, N)
-            globalError = NMatrix(ones(1, N));
+        function globalError = LOO_RF(data, N)
+            globalError = NMatrix(zeros(1, N));
             for i=1:data.n
                 tmp = data.matrix;
                 tmp(i, :) = [];
+                s = 0;
                 for j=1:N
-                    sample = tmp(randi(data.n - 1, data.n, 1), :);
+                    sample = tmp(randi(data.n - 1, data.n - 1, 1), :);
                     tree = treefit(sample(:, [1, 2]), sample(:, end));
-                    globalError.matrix(j) = globalError.matrix(j) +...
-                                            ~(treeval(tree, data.matrix(i, [1, 2])) == data.matrix(i, end));
+                    s = s + treeval(tree, data.matrix(i, [1, 2]));
+                    globalError.matrix(j) = globalError.matrix(j) + ~(round(s / j) == data.matrix(i, end));
                 end
             end
-            Nopt = find(globalError.matrix == min(globalError.matrix), 1, 'first');
         end
+   
+%         function globalError = LOO_RF(data, N)
+%             globalError = NMatrix(zeros(1, N));
+%             for tN=1:N
+%                 for i=1:data.n
+%                     s = 0;
+%                     tmp = data.matrix;
+%                     tmp(i, :) = [];
+%                     for j=1:tN
+%                         sample = tmp(randi(data.n - 1, data.n - 1, 1), :);
+%                         tree = treefit(sample(:, [1 2]), sample(:, end));
+%                         s = s + treeval(tree, data.matrix(i, [1, 2]));
+%                     end
+%                     globalError.matrix(tN) = globalError.matrix(tN) + ~(round(s / tN) == data.matrix(i, end));
+%                 end
+%             end   
+%         end
     end
 
     methods
@@ -108,17 +125,17 @@ classdef Classificator < handle
                 analysisError.matrix(2, i) = std(globalError.matrix(:, i));
             end
             mean_min = inf;
+            h = 1;
             while 1
-                for i=1:analysisError.m
+               for i=h:analysisError.m
                     if mean_min > analysisError.matrix(1, i)
                         h = i;
                         mean_min = analysisError.matrix(1, i);
                     else break;
                     end
-                end
-               std_min = find(analysisError.matrix(2, :) == min(analysisError.matrix(2, :)));
-               if h == std_min
-                   break
+               end
+               if h == find(analysisError.matrix(2, h) == min(analysisError.matrix(2, h), 1, 'first'))
+                   break;
                end
             end
         end

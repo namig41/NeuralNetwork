@@ -36,7 +36,7 @@ classdef NeuralNetwork < handle
     methods (Static = true)
         % normalization
         
-        function nX = n_min(X)
+        function nX = n_min_max(X)
             nX = (X - min(X)) ./ (max(X) - min(X));
         end
         
@@ -55,29 +55,37 @@ classdef NeuralNetwork < handle
         
         function createNeuralNetwork(self)
             self.W = cell(1, self.setting.nnodes.m - 1);
-            
+            self.updateW();
+        end
+        
+        function updateW(self)
             for i=1:self.setting.nnodes.m - 1
-                self.W{i} = normrnd(0, sqrt(self.setting.nnodes.matrix(i + 1)),...
-                                    [self.setting.nnodes.matrix(i + 1), self.setting.nnodes.matrix(i)]);
+                self.W{i} = randi([-150 150], [self.setting.nnodes.matrix(i + 1), self.setting.nnodes.matrix(i)]) ./ 1e4;
             end
         end
         
-        function [outputs_data, outputs_errors] = backpropagation(self, inputs_data, targets_data, index)
+        function [error, outputs_data, outputs_errors] = backpropagation(self, inputs_data, targets_data, index)
             if index < self.setting.nnodes.m
-                [outputs_data, outputs_errors] = self.backpropagation(self.af_sigmoid(self.W{index} * inputs_data), targets_data, index + 1);
-                self.W{index} = self.W{index} + self.setting.lr * (outputs_errors .* outputs_data .* (1 - outputs_data) * inputs_data');
+                [error, outputs_data, outputs_errors] = self.backpropagation(self.af_sigmoid(self.W{index} * inputs_data), targets_data, index + 1);
+                self.W{index} = self.W{index} - self.setting.lr *...
+                            (outputs_errors .* outputs_data .* (1 - self.af_sigmoid(outputs_data)) .* self.af_sigmoid(outputs_data) * inputs_data');
                 outputs_errors = self.W{index}' * outputs_errors;
             else
                 outputs_errors = inputs_data - targets_data;
+                error = outputs_errors;
             end
             outputs_data = inputs_data;
-       end
+        end
         
         function train(self, inputs_data, epochs)
             for e=1:epochs
-                for i=1:size(inputs_data, 1)
-                    self.backpropagation(inputs_data(i, [1 2])', inputs_data(i, end), 1);
-                end
+                Q = inf;
+                Qi = 0;
+                rx = inputs_data(randi(size(inputs_data, 1), 1), :);
+                while abs(Q - Qi) < 1e-8
+                    Q = (1 - 0.001)* Q + 0.001 * Qi;
+                    Qi = self.backpropagation(rx(:, [1 2])', rx(:, end), 1);
+                end  
             end
         end
         
@@ -85,7 +93,7 @@ classdef NeuralNetwork < handle
             outputs_data = inputs_data';
             for i=1:length(self.W)
                 outputs_data = self.af_sigmoid(self.W{i} * outputs_data);
-             end
+            end
         end
     end
     
