@@ -5,7 +5,7 @@ classdef RandomForest < handle
         RF
     end
     
-    methods (Static = true)
+    methods (Static = true)        
         function globalError = LOO_RF(data, N)
             globalError = NMatrix(zeros(1, N));
             for i=1:data.n

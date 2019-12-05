@@ -5,7 +5,7 @@ classdef RandomForest < handle
         RF
     end
     
-    methods (Static = true)
+    methods (Static = true)        
         function globalError = LOO_RF(data, N)
             globalError = NMatrix(zeros(1, N));
             for i=1:data.n
@@ -37,10 +37,9 @@ classdef RandomForest < handle
 %                 end
 %             end
 %         end        
-    end
+%     end
     
     methods
-        
         function self = RandomForest(N)
             self.Nopt = N;
         end
@@ -62,10 +61,10 @@ classdef RandomForest < handle
                 for j=1:self.Nopt
                     s = s + treeval(self.RF{j}, data(i, :));
                 end
-                if round(s / Nopt)
-                    T1.add_row(XY(i, :));
+                if round(s / self.Nopt)
+                    C1.add_row(data(i, :));
                 else
-                    T2.add_row(XY(i, :));
+                    C2.add_row(data(i, :));
                 end
             end 
         end
