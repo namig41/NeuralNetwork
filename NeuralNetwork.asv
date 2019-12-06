@@ -137,9 +137,9 @@ classdef NeuralNetwork < handle
             end
         end
         
-        function [time, iteration_count] = train(self, inputs_data, eps, method)
+        function [time, iteration_count] = train(self, inputs_data, epochs, eps, method)
             tic
-            iteration_count = zeros(1, size(inputs_data, 1));
+            iteration_count = zeros(1, epochs);
             for i=1:size(inputs_data, 1)
                 Q = 0;
                 Qi = inf;
@@ -152,7 +152,7 @@ classdef NeuralNetwork < handle
                              Qi = self.backpropagation(rx(:, [1 2])', rx(:, end), 1);
                     end
                     Q = (1 - 1e-3)* Q + 1e-3 * Qi;
-                    iteration_count(i) = iteration_count(i) + 1;
+                    iteration_count(e) = iteration_count(e) + 1;                                        
                 end
             end
             time = toc;

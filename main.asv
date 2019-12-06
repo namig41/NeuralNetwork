@@ -138,23 +138,25 @@ control_set2.unique();
 
 train_set = [train_set1.matrix ones(train_set1.n, 1); 
              train_set2.matrix zeros(train_set2.n, 1)];
-NMatrix.sattolo(train_set);
          
 control_set = [control_set1.matrix ones(control_set1.n, 1); 
              control_set2.matrix zeros(control_set2.n, 1)];
 
 globalError = NeuralNetwork.search_optimalNN(train_set, control_set, 5e-2);
+
 nn_setting = globalError{find([globalError{:, 1}] == min([globalError{:, 1}])), 2};
+% nn_setting.inodes = 2;
+% nn_setting.hnodes = 2;
+% nn_setting.onodes = 1;
+% nn_setting.lr = 5e-2;
 
 nn = NeuralNetwork(nn_setting);
 
+[time, iteration_count] = nn.train(train_set, 5e2, 1e-2, 'backpropagation');
+disp('backpropagation'); time, iteration_count
 nn.initW();
-[time, iteration_count] = nn.train(train_set, 1e-2, 'backpropagation');
-disp('backpropagation'); time, mean(iteration_count)
-
-nn.initW();
-[time, iteration_count] = nn.train(train_set, 1e-2, 'DBD');
-disp('DBD'); time, mean(iteration_count)
+[time, iteration_count] = nn.train(train_set, 5e2, 1e-2, 'DBD');
+disp('DBD'); time, iteration_count
 
 figure(1)
 hold on

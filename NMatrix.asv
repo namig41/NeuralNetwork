@@ -7,12 +7,10 @@ classdef NMatrix < handle
   end
 
   methods (Static = true)
-      function matrix = sattolo(matrix)
+      function sattolo(matrix)
           for i=1:size(matrix, 1)
               j = randi(size(matrix, 1));
-              tmp = matrix(i, :);
-              matrix(i, :) = matrix(j, :);
-              matrix(j, :) = tmp;
+              
           end
       end
   end
