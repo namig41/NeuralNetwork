@@ -1,4 +1,4 @@
-classdef NMatrix < handle
+classdef NMatrix < handle 
 
   properties
     matrix = 0;

@@ -1,4 +1,4 @@
-classdef RandomForest < handle
+classdef RandomForest < handle 
     
     properties
         Nopt

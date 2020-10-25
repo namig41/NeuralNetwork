@@ -1,4 +1,4 @@
-classdef NeuralNetwork < handle
+classdef NeuralNetwork < handle 
     
     properties
         setting

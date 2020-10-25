@@ -122,7 +122,7 @@ classdef Classificator < handle
                     end
                     data.matrix = tmp.matrix;
                 end
-                globalError.matrix(th) = min(globalError.matrix(th), tE);
+                globalError.matrix(th) = min(globalError.matrix(th), tE); 
             end
         end
     end
